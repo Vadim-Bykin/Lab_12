@@ -1,69 +1,53 @@
-#6. Вычислить сумму знакопеременного ряда |х(n-1)|/(n-1)!, где х-матрица ранга к
-# (к и матрица задаются случайным образом), n - номер слагаемого.
-# Сумма считается вычисленной, если точность вычислений будет не меньше t знаков после запятой.
-# У алгоритма д.б. линейная сложность. Знак первого слагаемого  -.
+# Вычислить сумму знакопеременного ряда |х*(n-1)|/(n-1)!, где х-матрица ранга к (к и матрица задаются случайным образом), n - номер слагаемого.
+# Сумма считается вычисленной, если точность вычислений будет не меньше t знаков после запятой. У алгоритма д.б. линейная сложность.
+# Знак первого слагаемого  -.
 
 import random
 import numpy as np
+from decimal import Decimal, getcontext
 
-# создание матрицы
-def make_matrix(t):
-    k = random.randint(2, 6)
-    n = []
-    for i in range(k):
-        n.append([])
-        for j in range(k):
-            n[i].append(random.choice([-1, 1]))
-    matrix = np.array(n)
-    if abs(np.linalg.det(n)) == 0:
-        return make_matrix(t)
+# Генерация случайного значения k и матрицы x
+
+def matrix():
+    k = random.randint(2, 10)
+    x = np.random.randint(-1, 1, (k, k))
+    if abs(np.linalg.det(x)) == 0:
+        return matrix()
     else:
+        return x
 
-        return matrix
+def s_sum(x, t):
+    n = 1  # Номер слагаемого
+    curr_x = x  # Текущая матрица
+    factorial = -1  # Накопляемый факториал
+    res = 0  # Переменная результата
 
-# функция факториала
-def fac(n):
-    answer = 1
-    for i in range(1, n):
-        answer *= i
-    return answer
+    while True:
+        curr_term = Decimal(np.linalg.det(curr_x * (n - 1))) / Decimal(factorial)  # Вычисляем текущий член ряда
+        res += curr_term  # Прибавляем
+        # Проверка на достижение точности
+        if abs(curr_term) < 1 / Decimal(10 ** t) and curr_term != 0:
+            break
+        n += 1
+        factorial *= -(n - 1)
 
-# функция для подсчёта знакопеременного ряда
-def Line(t):
-    if t < 0:
-        print('Введите положительное число')
-        return
-    matrix = make_matrix(t)
-    print("Начальная матрица: ")
-    print(matrix)
-    answ = 0.0
-    n = 1
-    flag = True
-    while flag:
-        try:
-            matrix = matrix * fac(n - 1)
-            answ += ((-1) ** n) * (abs(np.linalg.det(matrix)) / fac(n - 1))
-            n += 1
-            if len(str(answ).split('.')) >= 2:
-                if len(str(answ).split('.')[1]) > t:
-                    flag = False
-                elif str(answ).find('e') != -1:
-                    try:
-                        flag = (len(str(answ).split('.')[1]) + int(str(answ).split('-')[1])) < t
-                    except:
-                        flag = (len(str(answ).split('.')[1]) + int(str(answ).split('+')[1])) < t
-        except np.core._exceptions.UFuncTypeError:
-            print('Числа в матрице вышли слишком большими')
-            print('Для повторного запуска напишите новое число:')
-            return
-    print('финальный вид матрицы:')
-    print(matrix)
-    print('Сумма знакопеременного ряда |х(n-1)|/(n-1)!:', answ)
-    print('Для повторного запуска напишите новое число:')
+    return res
 
-# запуск программы
-while True:
-    try:
-        Line(int(input('Введите t - кол-во знаков после запятой: ')))
-    except ValueError:
-        print('Введите число')
+print('Введите число t, являющееся количеством знаков после запятой (точностью):')
+t = int(input())
+while t < 1:
+    t = int(input('Вы ввели число, неподходящее по условию, введите число t, большее или равное 1:\n'))
+
+print()
+
+x = matrix()
+
+# Вывод матрицы x
+print('Сгенерированная матрица:')
+print(x)
+print()
+
+# Установка технической точности вычислений
+getcontext().prec = t
+result = s_sum(x, t)
+print(f'Сумма ряда |х*(n-1)|/(n-1)! с точностью {t} знаков после запятой: {result:.{t}f}')
